@@ -63,3 +63,58 @@ function computeClues(solution) {
   }
   return { rowClues, colClues };
 }
+
+/**
+ * Compute fill count for a given PRNG index without allocating a 2-D grid.
+ * Used by getLevelOrder to rank all 1000 levels cheaply.
+ */
+function computeFillCount(size, prngIndex) {
+  const rand = mulberry32(size * 100000 + prngIndex + 1);
+  const density = 0.38 + rand() * 0.22;
+  let count = 0;
+  for (let i = 0; i < size * size; i++) {
+    if (rand() < density) count++;
+  }
+  return count;
+}
+
+/**
+ * Return an array of length LEVELS_PER_SIZE whose value at index i is the
+ * PRNG seed that produces the i-th easiest puzzle for the given size.
+ * index 0 = easiest (most filled), index 999 = hardest (fewest filled).
+ * Result is cached so sorting runs at most once per size per page load.
+ */
+const _levelOrderCache = {};
+
+function getLevelOrder(size) {
+  if (_levelOrderCache[size]) return _levelOrderCache[size];
+  const entries = Array.from({ length: LEVELS_PER_SIZE }, (_, i) => ({
+    i,
+    fill: computeFillCount(size, i),
+  }));
+  entries.sort((a, b) => b.fill - a.fill); // descending: more fill = easier
+  _levelOrderCache[size] = entries.map(e => e.i);
+  return _levelOrderCache[size];
+}
+
+/**
+ * Estimate puzzle difficulty from fill density.
+ * More filled cells = less placement ambiguity = easier.
+ * Generated density range is 38–60%; thresholds split that into thirds.
+ * Returns 'easy' | 'medium' | 'hard'.
+ */
+const DIFF_EASY_MIN = 0.52; // fill ratio >= this → easy
+const DIFF_HARD_MAX = 0.44; // fill ratio <  this → hard
+
+function computeDifficulty(rowClues, colClues, size) {
+  const filledCells = rowClues.flat().reduce((s, n) => s + n, 0);
+  const fillRatio   = filledCells / (size * size);
+  if (fillRatio >= DIFF_EASY_MIN) return 'easy';
+  if (fillRatio <  DIFF_HARD_MAX) return 'hard';
+  return 'medium';
+}
+
+/** Capitalize the first letter of a string. */
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

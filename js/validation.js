@@ -105,7 +105,7 @@ function showWin() {
   document.getElementById('winTime').textContent     = formatTime(timerElapsed);
   document.getElementById('winMistakes').textContent = mistakeCount;
   document.getElementById('winSub').textContent      =
-    `${currentSize}×${currentSize} · Level ${currentLevel + 1}`;
+    `${currentSize}×${currentSize} · Level ${currentLevel + 1} · ${capitalize(currentDifficulty)}`;
   document.getElementById('winModal').classList.add('active');
   document.getElementById('btnModalNext').focus();
   recordHistory();

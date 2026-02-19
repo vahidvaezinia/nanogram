@@ -9,8 +9,9 @@ const FILLED = 1; // player filled
 const MARKED = 2; // player marked as known-empty (✕)
 
 // ── Current puzzle identity ──────────────────────────────────────────
-let currentSize  = 10;  // active grid dimension (5 | 10 | 15)
-let currentLevel = 0;   // 0-based level index; displayed as level+1
+let currentSize       = 10;       // active grid dimension (5 | 10 | 15)
+let currentLevel      = 0;        // 0-based level index; displayed as level+1
+let currentDifficulty = 'medium'; // 'easy' | 'medium' | 'hard'
 
 // ── Active puzzle data (populated by loadPuzzle) ─────────────────────
 let solution   = null;  // 2-D array of 0/1

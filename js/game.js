@@ -20,10 +20,17 @@ function loadPuzzle(size, level) {
   rows = size;
   cols = size;
 
-  solution = generateSolution(size, level);
+  const prngSeed = getLevelOrder(size)[level];
+  solution = generateSolution(size, prngSeed);
   const { rowClues: rc, colClues: cc } = computeClues(solution);
   rowClues = rc;
   colClues = cc;
+
+  // Compute and display difficulty rating
+  currentDifficulty = computeDifficulty(rowClues, colClues, size);
+  const diffBadge = document.getElementById('diffBadge');
+  diffBadge.textContent = capitalize(currentDifficulty);
+  diffBadge.className   = `diff-badge diff-${currentDifficulty}`;
 
   // Reset game flags
   frozen          = false;

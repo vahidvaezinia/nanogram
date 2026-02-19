@@ -43,6 +43,7 @@ function renderHistoryList() {
   header.innerHTML = `
     <span class="hi-size">Size</span>
     <span class="hi-level">Level</span>
+    <span class="hi-diff">Diff</span>
     <span class="hi-time">Time</span>
     <span class="hi-mistakes">✗</span>
   `;
@@ -53,17 +54,24 @@ function renderHistoryList() {
     const row = document.createElement('div');
     row.className = 'history-item';
     row.setAttribute('role', 'listitem');
-    row.setAttribute('aria-label',
-      `${entry.size}×${entry.size} Level ${entry.level + 1}, solved in ${formatTime(entry.timeMs)}`);
 
     const sizeLabel = `${entry.size}×${entry.size}`;
     const dateStr = new Date(entry.solvedAt).toLocaleDateString(undefined, {
       month: 'short', day: 'numeric',
     });
 
+    // Recompute difficulty — entry.level is the sorted display index, so translate to PRNG seed first
+    const prngSeed = getLevelOrder(entry.size)[entry.level];
+    const { rowClues: rc, colClues: cc } = computeClues(generateSolution(entry.size, prngSeed));
+    const diff = computeDifficulty(rc, cc, entry.size);
+
+    row.setAttribute('aria-label',
+      `${sizeLabel} Level ${entry.level + 1}, ${capitalize(diff)}, solved in ${formatTime(entry.timeMs)}`);
+
     row.innerHTML = `
       <span class="hi-size hi-size-${entry.size}">${sizeLabel}</span>
       <span class="hi-level">Level ${entry.level + 1}</span>
+      <span class="hi-diff"><span class="diff-badge diff-${diff}">${capitalize(diff)}</span></span>
       <span class="hi-time">${formatTime(entry.timeMs)}</span>
       <span class="hi-mistakes">${entry.mistakes}</span>
       <span class="hi-date">${dateStr}</span>
