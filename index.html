@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nonogram · Picross</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     APP HEADER — Row 1: title + utility controls
+════════════════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="header-row1">
+    <h1 class="app-title">Nono<span>gram</span></h1>
+    <div class="spacer"></div>
+    <div class="header-row1-right">
+      <button class="btn-secondary" id="btnDark" aria-label="Toggle dark mode">🌙 Dark</button>
+    </div>
+  </div>
+
+  <!-- Row 2: level navigator -->
+  <div class="level-nav" role="toolbar" aria-label="Level navigation">
+    <select id="sizeSelect" aria-label="Puzzle size">
+      <option value="5">5 × 5</option>
+      <option value="10" selected>10 × 10</option>
+      <option value="15">15 × 15</option>
+    </select>
+
+    <div class="sep"></div>
+
+    <button class="btn-nav" id="btnPrev" aria-label="Previous level" title="Previous level">‹</button>
+
+    <div class="level-badge-wrap">
+      <div class="level-badge" id="levelBadge" role="button" tabindex="0"
+           aria-label="Current level, click to jump" title="Click to jump to a level">
+        <span>Level</span>
+        <span class="lb-num" id="lbNum">1</span>
+        <span class="lb-sep">/</span>
+        <span class="lb-total">1000</span>
+      </div>
+      <div class="jump-popover" id="jumpPopover" role="dialog" aria-label="Jump to level">
+        <label for="jumpInput">Jump to level (1 – 1000)</label>
+        <div class="jump-row">
+          <input type="number" id="jumpInput" min="1" max="1000" placeholder="42" />
+          <button class="btn-primary" id="btnJumpGo" style="padding:5px 10px">Go</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-nav" id="btnNext" aria-label="Next level" title="Next level">›</button>
+
+    <div class="spacer"></div>
+
+    <button class="btn-ghost" id="btnHistory" aria-label="View history">🕐 History</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STATS BAR
+════════════════════════════════════════════════════════════════════ -->
+<div class="stats-bar" role="status" aria-live="polite">
+  <div class="stat-pill">
+    <span class="icon">⏱</span>
+    <strong id="timerDisplay">0:00</strong>
+  </div>
+  <div class="stat-pill">
+    <span>Filled</span>
+    <strong id="filledCount">0</strong>
+    <span style="color:var(--text-light)">/</span>
+    <strong id="totalCount">0</strong>
+  </div>
+  <div class="stat-pill" id="mistakesPill" style="display:none">
+    <span class="icon">✗</span>
+    <span>Mistakes</span>
+    <strong id="mistakeCount">0</strong>
+  </div>
+  <label class="autocheck-pill">
+    <input type="checkbox" id="autoCheck" aria-label="Auto-check mode" />
+    Auto-check
+  </label>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     GAME CONTROLS
+════════════════════════════════════════════════════════════════════ -->
+<div class="game-controls">
+  <button class="btn-secondary" id="btnReset"  aria-label="Reset board">↺ Reset</button>
+  <button class="btn-primary"   id="btnCheck"  aria-label="Check solution">✓ Check</button>
+  <button class="btn-danger"    id="btnReveal" aria-label="Reveal solution">👁 Reveal</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     BOARD
+════════════════════════════════════════════════════════════════════ -->
+<div class="board-wrapper">
+  <div id="board" role="grid" aria-label="Nonogram puzzle grid" tabindex="0"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════════════ -->
+<footer>
+  <kbd>Left-click</kbd> fill &nbsp;·&nbsp; <kbd>Right-click</kbd> mark ✕ &nbsp;·&nbsp; Drag to paint<br>
+  <kbd>↑↓←→</kbd> move &nbsp;·&nbsp; <kbd>Space</kbd> fill &nbsp;·&nbsp; <kbd>X</kbd> mark ✕
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     WIN MODAL
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="win-emoji">🎉</div>
+      <div class="win-title" id="winTitle">Puzzle Solved!</div>
+      <div class="win-sub"   id="winSub"></div>
+      <div class="win-stats">
+        <div class="win-stat">
+          <div class="win-stat-val" id="winTime">—</div>
+          <div class="win-stat-lbl">Time</div>
+        </div>
+        <div class="win-stat">
+          <div class="win-stat-val" id="winMistakes">—</div>
+          <div class="win-stat-lbl">Mistakes</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary"   id="btnModalNext">Next Level ›</button>
+      <button class="btn-secondary" id="btnModalContinue">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     HISTORY MODAL
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="historyTitle">Solved Puzzles</h2>
+      <button class="modal-close btn-ghost" id="btnHistoryClose" aria-label="Close history">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="filter-tabs" role="group" aria-label="Filter by size">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="5">5 × 5</button>
+        <button class="filter-tab" data-filter="10">10 × 10</button>
+        <button class="filter-tab" data-filter="15">15 × 15</button>
+      </div>
+      <div class="history-list" id="historyList" role="list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger"    id="btnClearHistory">Clear History</button>
+      <button class="btn-secondary" id="btnHistoryClose2">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCRIPTS — loaded in dependency order (least → most dependent)
+     Plain <script src> tags keep file:// compatibility in all browsers.
+════════════════════════════════════════════════════════════════════ -->
+<script src="js/puzzle.js"></script>
+<script src="js/state.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/render.js"></script>
+<script src="js/input.js"></script>
+<script src="js/validation.js"></script>
+<script src="js/history.js"></script>
+<script src="js/game.js"></script>
+
+</body>
+</html>
