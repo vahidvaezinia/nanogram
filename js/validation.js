@@ -98,6 +98,35 @@ function restoreCheckHighlights() {
   }
 }
 
+/**
+ * After a cell changes, check if its row and/or column is now fully solved.
+ * If so, mark every remaining EMPTY cell in that line with MARKED (✕).
+ * Only EMPTY → MARKED transitions are made; FILLED and existing marks are untouched.
+ * Completion is based on FILLED patterns only, so no cascading is possible.
+ */
+function autoMarkCompletedLines(changedRow, changedCol) {
+  // Row check
+  const rowPlayer = boardState[changedRow].map(v => v === FILLED ? 1 : 0);
+  if (arraysEqual(runLengthEncode(rowPlayer), rowClues[changedRow])) {
+    for (let c = 0; c < cols; c++) {
+      if (boardState[changedRow][c] === EMPTY) {
+        boardState[changedRow][c] = MARKED;
+        renderCell(changedRow, c);
+      }
+    }
+  }
+  // Column check
+  const colPlayer = boardState.map(row => row[changedCol] === FILLED ? 1 : 0);
+  if (arraysEqual(runLengthEncode(colPlayer), colClues[changedCol])) {
+    for (let r = 0; r < rows; r++) {
+      if (boardState[r][changedCol] === EMPTY) {
+        boardState[r][changedCol] = MARKED;
+        renderCell(r, changedCol);
+      }
+    }
+  }
+}
+
 /** Show the win modal and freeze input. Called by both checkWin paths. */
 function showWin() {
   frozen = true;

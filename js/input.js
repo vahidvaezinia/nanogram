@@ -61,6 +61,7 @@ function onCellChanged(r, c) {
   startTimerIfNeeded();
   clearCheckHighlights();
   renderCell(r, c);
+  autoMarkCompletedLines(r, c);
   updateClueHighlights();
   updateStats();
   saveProgress();
